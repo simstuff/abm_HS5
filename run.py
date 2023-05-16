@@ -2,6 +2,7 @@ import mesa
 import agent
 import model
 import matplotlib as plt
+import pandas as pd
 # use optuna to find ideal model config, e.g model that maximizes trust? maybe + steps taken to get there?
 
 total_trust = []
@@ -16,3 +17,6 @@ for j in range(100):
     for agent in model.schedule.agents:
         total_trust.append(agent.wealth)
     plt.hist(total_trust, bins=range(max(total_trust) + 1))
+
+    data = model.datacollector.get_model_vars_dataframe()
+    data.to_csv("/path")
