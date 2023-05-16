@@ -9,7 +9,11 @@ class TrusModel(mesa.Model):
      self.schedule = mesa.time.RandomActivation(self)
      self.network = mesa.space.NetworkGrid(N/2)
      self.datacollector = mesa.DataCollector(
-        model_reporters={"Gini": compute_gini}, agent_reporters={"Wealth": "wealth"}
+        model_reporters={"Gini": compute_gini}, agent_reporters={"Wealth": "wealth",
+                                                                 "Trust":"trust",
+                                                                 "Atributes":"attributes",
+                                                                 "Type":"type",
+                                                                 "ID":"id"}
         )   
      # Create agents
      for i in range(self.num_agents):
