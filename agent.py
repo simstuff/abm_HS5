@@ -9,13 +9,18 @@ class agent(mesa.Agent):
         self.personalized_trust=None #how to choose starting level?
         self.wealth=np.random()
         self.type=None
+        self.send_money=False
         self.suspectability=np.random()
         self.percepts=[{"id":{}
                        "memory":},] #memory -> introduce forgetting? #best implemented as dict
 
     def step(self, partner):
         trust_level=0
-        
+        self.calculate_trust()
+        if self.wealth < 2*(1-self.personalized_trust):
+            self.send_money=False
+        else:
+            self.send_money=True #send done in env
         
         if np.random() > randomWert: #zufällige Wsl für Änderung von generalized trust
             self.change_of_generalized_trust
