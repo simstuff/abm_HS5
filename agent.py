@@ -2,7 +2,7 @@ import mesa
 import numpy as np
 
 class agent(mesa.Agent):
-    def __init__(self, id):
+    def __init__(self, id:int):
         super().__init__(id)
         self.id = id
         self.generalized_trust=np.random.normal(loc=0.0,scale=1,size=None)
@@ -10,10 +10,11 @@ class agent(mesa.Agent):
         self.wealth=np.random.pareto(100) #pareto distribution for wealth
         self.type=None
         self.send_money=False
+        self.info=None #sum of info from neighbors
         self.suspectability=np.random.normal(loc=0.0,scale=1,size=None)
-        self.percepts={"id":[],
-                       "memory":{},#memory -> introduce forgetting? #best implemented as dict
-                       "history":[0,0,0]} #percept history for change of generalized trust
+        self.percepts={
+            "memory":{},#memory -> introduce forgetting? #best implemented as dict
+            "history":[0,0,0]} #percept history for change of generalized trust
 
     def step(self, partner):
         self.calculate_trust(partner)
@@ -28,13 +29,31 @@ class agent(mesa.Agent):
 
     #trust should be expressed as percentage to enable gradual sendings, send =1*trust, if < 0.5 no trust
     def calculate_trust(self,partner):
-        for percept in self.percepts:
-            if percept["id"]==partner.id:
-                pass
-            else:
-                pass
-        self.personalized_trust=(self.generalized_trust+self.personalized_trust)/2
+        dict=self.percepts["memory"]
+        if partner.id in dict:
+            percept_sequence=dict.get(str(partner.id))
+            for m in percept_sequence:
+                neg=0
+                pos=0
+                if h < 0:
+                    neg+=1
+                elif h > 0:
+                    pos+=1
+                else:
+                    pass
+                
+                if pos <= neg:
+                    self.send_money=False
+                else:
+                    self.send_money=True
+        else:
+            self.info = self.contact_neighbors()
+        self.personalized_trust=(((self.generalized_trust+self.personalized_trust)/2)*(1-self.suspectability))+self.suspectability*self.info*(self.generalized_trust+self.personalized_trust)/2)
 
+    def contact_neighbors():
+
+        return info
+    
     def change_of_generalized_trust(self,change_prop):
         for h in self.percepts["history"]:
             neg=0
@@ -47,9 +66,4 @@ class agent(mesa.Agent):
                 pass
 
         if pos > neg:
-            self.generalized_trust=self.generalized_trust*change_prop #number of increase,how to choose?
-    # choose agent
-    # check money,
-    # send money,
-    # receive money, 
-    # update trust value
+            self.generalized_trust=self.generalized_trust*change_prop 
