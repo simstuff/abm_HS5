@@ -41,8 +41,10 @@ class agent(mesa.Agent):
             pos=0
             if h < 0:
                 neg+=1
-            else:
+            elif h > 0:
                 pos+=1
+            else:
+                pass
 
         if pos > neg:
             self.generalized_trust=self.generalized_trust*change_prop #number of increase,how to choose?
