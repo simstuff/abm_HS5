@@ -10,7 +10,7 @@ class agent(mesa.Agent):
         self.wealth=np.random.pareto(100) #pareto distribution for wealth
         self.type=None
         self.send_money=False
-        self.info=None #sum of info from neighbors
+        self.info=0 #sum of info from neighbors
         self.suspectability=np.random.normal(loc=0.0,scale=1,size=None)
         self.percepts={
             "memory":{},#memory -> introduce forgetting? #best implemented as dict
@@ -35,9 +35,9 @@ class agent(mesa.Agent):
             for m in percept_sequence:
                 neg=0
                 pos=0
-                if h < 0:
+                if m < 0:
                     neg+=1
-                elif h > 0:
+                elif m > 0:
                     pos+=1
                 else:
                     pass
@@ -47,12 +47,13 @@ class agent(mesa.Agent):
                 else:
                     self.send_money=True
         else:
-            self.info = self.contact_neighbors()
+            self.info = self.calculate_neighbor_info()
         self.personalized_trust=(((self.generalized_trust+self.personalized_trust)/2)*(1-self.suspectability))+self.suspectability*self.info*(self.generalized_trust+self.personalized_trust)/2)
+        self.info=0
 
-    def contact_neighbors():
+    def calculate_neighbor_info(self):
 
-        return info
+        self.info=
     
     def change_of_generalized_trust(self,change_prop):
         for h in self.percepts["history"]:
