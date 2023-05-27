@@ -42,7 +42,3 @@ class agent(mesa.Agent):
     # send money,
     # receive money, 
     # update trust value
-
-    def connect():
-        #connects to another agent in own network or outside of own network
-        pass
