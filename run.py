@@ -4,7 +4,7 @@ import model
 import matplotlib as plt
 import pandas as pd
 # use optuna to find ideal model config, e.g model that maximizes trust? maybe + steps taken to get there?
-
+seed=42
 total_trust = []
 trust_dst = "poisson"
 # This runs the model 100 times, each model executing 10 steps.
