@@ -7,19 +7,20 @@ class agent(mesa.Agent):
         self.id = id
         self.generalized_trust=np.random.normal(loc=0.0,scale=1,size=None)
         self.personalized_trust=None #how to choose starting level?
-        self.wealth=np.random.pareto(100) #pareto distribution for wealth
+        self.wealth=np.random.pareto(10) #pareto distribution for wealth
         self.type=None
         self.send_money=False
         self.info=0 #sum of info from neighbors
-        self.suspectability=np.random.normal(loc=0.0,scale=1,size=None)
-        self.percepts={
-            "memory":{},#memory -> introduce forgetting? #best implemented as dict
-            "history":[0,0,0]} #percept history for change of generalized trust
+        self.suspectability=np.random.uniform(low=0,high=1.0)
+        self.percepts={{}}
+        #{"id":{"personalizedTrust":0
+         #   "memory":[]} #memory -> introduce forgetting? #best implemented as dict
+        
 
     def step(self, partner):
-        self.calculate_trust(partner)
-        if self.wealth < 2*(1-self.personalized_trust):
-            self.send_money=False
+        self.calculate_trust(partner) #believe
+        if self.wealth < 2*(1-self.personalized_trust): #desire
+            self.send_money=False #intention
         else:
             self.send_money=True #send done in env
         
@@ -53,7 +54,7 @@ class agent(mesa.Agent):
 
     def calculate_neighbor_info(self):
 
-        self.info=
+        self.info=None #get neighbors and calculate following the equation
     
     def change_of_generalized_trust(self,change_prop):
         for h in self.percepts["history"]:
