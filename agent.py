@@ -1,8 +1,9 @@
 import mesa
 import numpy as np
+import model
 
 class agent(mesa.Agent):
-    def __init__(self, id:int):
+    def __init__(self, id:int,model):
         super().__init__(id)
         self.id=id
         self.generalized_trust=np.random.normal(loc=0.0,scale=1,size=None)
@@ -13,6 +14,7 @@ class agent(mesa.Agent):
         self.suspectability=np.random.uniform(low=0,high=1.0)
         self.percepts={}
         self.last_wealth=self.wealth
+        self.model=model
         self.partner=None
         self.last_partner_id=None
         self.neighbors=[] #to be initialized through grid
@@ -58,6 +60,8 @@ class agent(mesa.Agent):
 
     def calculate_neighbor_info(self):
         self.info=0
+        self.neighbors=self.model.network.get_neighbors(node_id=self.id, include_center=False, radius=1)
+
         for n in self.neighbors:
             if n.id in self.percepts:
                 weight=self.percepts[n.id]
