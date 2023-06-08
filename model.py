@@ -1,35 +1,50 @@
 import mesa
-import agent
+from agent import agent
 import numpy as np
+import networkx as nx
+
+def total_wealth(model):
+   total=0
+   for a in model.num_nodes:
+      total+=a.wealth
+   return total
+
 
 class TrustModel(mesa.Model):
-    def __init__(self, N, trust_distribution):
-     self.seed=42
-     self.num_agents = N
-     self.schedule = mesa.time.RandomActivation(self)
-     self.network = mesa.space.NetworkGrid(g=N)
-     self.datacollector = mesa.DataCollector(
-        model_reporters={"Gini": compute_gini}, agent_reporters={"Wealth": "wealth",
-                                                                 "Perosnalized Trust":"trust",
-                                                                 "Atributes":"attributes",
-                                                                 "Type":"type",                                                       
-                                                                 "ID":"id"}
+    def __init__(self, num_nodes:int): #different graphs to initialize network?
+      self.seed=42
+      avg_node_degree=3
+      self.num_nodes = num_nodes
+      prob = avg_node_degree /  num_nodes
+      self.G = nx.erdos_renyi_graph(n=self.num_nodes, p=prob)
+      self.grid = mesa.space.NetworkGrid(self.G)
+      self.schedule_trustee = mesa.time.RandomActivation(self)
+      self.schedule_trustor = mesa.time.RandomActivation(self)
+      self.datacollector = mesa.DataCollector(
+        {
+           "Gini": "compute_gini",
+           "Wealth": "wealth",
+           "Perosnalized Trust":"trust",
+           "Atributes":"attributes",
+        }
      )   
-     # Create agents128
-     for i in range(self.num_agents):
-        for node_id in self.network.G.nodes:
+      for i,node in enumerate(self.G.nodes()):
             a=agent(i,self)
-            self.network.place_agent(a,node_id=node_id)
-            a.neighbors=self.network.get_neighbors(node_id=i, include_center: bool = False, radius: int = 1)
-
-            self.schedule.add(a)
-            print(f"Agent placed: {a} in Node {node_id}" )
+            if i < self.num_nodes/2:
+                a.type="trustor"
+                self.schedule_trustor.add(a)
+            else:
+                a.type="trustee"
+                self.schedule_trustee.add(a)
+            self.grid.place_agent(a,node_id=node)
+            print(f"Agent placed: {a.id} in Node {node}" )
+            print(a.type)
 
     #scheduler to control agent steps
     def step(self):
-       #self.datacollector.collect(self)
-       self.schedule
-       self.network.get_neighbors(node_id: int, include_center: bool = False, radius: int = 1)
-       self.schedule.step()
+        pass
+        #self.schedule.
+        #self.datacollector.collect(self)
+        # #self.schedule.step()
 
 #random scheduler -> get list of agents by get all cell contennts of network grid

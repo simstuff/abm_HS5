@@ -4,7 +4,7 @@ import model
 
 class agent(mesa.Agent):
     def __init__(self, id:int,model):
-        super().__init__(id)
+        super().__init__(id,model)
         self.id=id
         self.generalized_trust=np.random.normal(loc=0.0,scale=1,size=None)
         self.wealth=np.random.pareto(10) #pareto distribution for wealth
@@ -19,9 +19,6 @@ class agent(mesa.Agent):
         self.last_partner_id=None
         self.neighbors=[] #to be initialized through grid
         self.memory=[0,0,0]#sum all elements in array and if 3 then change generlaized trust
-        #{"id":"personalizedTrust":0}
-         #    -> introduce forgetting? #best implemented as dict
-        
 
     def step(self, partner):
         self.last_partner_id=partner.id
