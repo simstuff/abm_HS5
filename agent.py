@@ -17,26 +17,28 @@ class agent(mesa.Agent):
         self.partner=None
         self.last_partner_id=None
         self.neighbors=[] #to be initialized through grid
-        self.memory=[0,0,0]#sum all elements in array and if 3 then change generlaized trust
+        self.memory=[]#sum all elements in array and if 3 then change generlaized trust
         self.security_level=np.random.uniform(low=1,high=3)
 
     def step(self):
-        self.last_partner_id=self.partner.id
-        if self.last_wealth is not None: #to not execute check in first round
+        #self.last_partner=self.partner
+        if self.last_wealth is  None: #to not execute check in first round
             self.check_wealth_update_trust()
+            self.memory
         self.interact()
 
     def interact(self):
         if self.type is not None:
+            self.last_wealth=self.wealth
             trust_level=self.calculate_trust() #believe
             if self.wealth > self.security_level*trust_level: #desire
                 self.partner.wealth+=self.model.increase #intention
         
-            if sum(self.memory)==3:
+            if sum(self.memory[-3:])==3:
                 change_prop=np.random.uniform()
                 if change_prop > self.model.change_threshold: #zufällige Wsl für Änderung von generalized trust
                     self.generalized_trust=self.generalized_trust+self.generalized_trust*change_prop
-            if sum(self.memory)==0:
+            if sum(self.memory[-3:])==0:
                 change_prop=np.random.uniform(low=-1,high=0)
                 if change_prop < -1*self.model.change_threshold: #zufällige Wsl für Änderung von generalized trust
                     self.generalized_trust=self.generalized_trust+self.generalized_trust*change_prop
@@ -45,14 +47,14 @@ class agent(mesa.Agent):
             if self.wealth > self.last_wealth:
                 trust_level=self.calculate_trust(self.partner) #believe
                 if self.wealth > self.security_level*trust_level: #desire
-                    self.partner.wealth+=self.model.increase #intention
-            
+                    self.partner.wealth+=self.model.increase/2 #intention
+                    self.wealth-=self.model.increase/2
 
 
     #trust should be expressed as percentage to enable gradual sendings, send =1*trust, if < 0.5 no trust
     def calculate_trust(self):
         if self.partner.id in self.percepts:
-            personalized_trust=self.percepts[self.last_partner_id].get("personalizedTrust")
+            personalized_trust=self.percepts[self.partner]
             self.info=self.calculate_neighbor_info()
             trust_level=(((self.generalized_trust+personalized_trust)/2)*(1-self.suspectability))+self.suspectability*self.info*(self.generalized_trust+personalized_trust)/2
 
@@ -82,12 +84,15 @@ class agent(mesa.Agent):
     def check_wealth_update_trust(self):
         if self.last_wealth < self.wealth:
             change=np.random.uniform() #make change distr responsive?
-            last_trust_value=self.percepts[self.last_partner_id]
+            last_trust_value=self.percepts[self.partner]
             new_trust_value=last_trust_value-change*last_trust_value
-            self.percepts[self.last_partner_id]=new_trust_value
+            self.percepts[self.partner]=new_trust_value
+            self.memory[self.model.step_num]=0
         
         else:
             change=np.random.uniform()
-            last_trust_value=self.percepts[self.last_partner_id]
+            last_trust_value=self.percepts[self.partner]
             new_trust_value=last_trust_value+change*last_trust_value
-            self.percepts[self.last_partner_id]=new_trust_value
+            self.percepts[self.partner]=new_trust_value
+            self.memory[self.model.step_num]=1
+

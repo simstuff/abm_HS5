@@ -16,6 +16,7 @@ class TrustModel(mesa.Model):
       self.increase=increase
       self.change_threshold=change_threshold
       avg_node_degree=3
+      self.step_num=0
       self.num_nodes = num_nodes
       prob = avg_node_degree /  num_nodes
       self.G = nx.erdos_renyi_graph(n=self.num_nodes, p=prob)
@@ -63,7 +64,9 @@ class TrustModel(mesa.Model):
             self.schedule.add(a) #add all trustees in end of schedule to execite only after action of trustors
         
          
-        self.schedule.step()    
+        self.schedule.step()  
+        self.step_num+=1
+  
 
           
         #self.schedule.
