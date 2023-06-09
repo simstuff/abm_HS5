@@ -10,7 +10,7 @@ trust_dst = "poisson"
 # This runs the model 100 times, each model executing 10 steps.
 for j in range(100):
     # Run the model
-    model = model(10, trust_dst)
+    model = model(10)
     for i in range(10):
         model.step()
         # Store the results

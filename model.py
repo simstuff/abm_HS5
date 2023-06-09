@@ -1,6 +1,6 @@
 import mesa
-from .agent import agent
-import numpy as np
+from agent import agent
+#import numpy as np
 import networkx as nx
 
 def total_wealth(model):
@@ -11,15 +11,16 @@ def total_wealth(model):
 
 
 class TrustModel(mesa.Model):
-    def __init__(self, num_nodes:int,increase:int): #different graphs to initialize network?
+    def __init__(self, num_nodes:int,increase:int,change_threshold:float): #different graphs to initialize network?
       self.seed=42
       self.increase=increase
+      self.change_threshold=change_threshold
       avg_node_degree=3
       self.num_nodes = num_nodes
       prob = avg_node_degree /  num_nodes
       self.G = nx.erdos_renyi_graph(n=self.num_nodes, p=prob)
       self.grid = mesa.space.NetworkGrid(self.G)
-      self.schedule = mesa.time.BaseScheduler(self)
+      self.schedule = mesa.time.StagedActivation(self,["interact","step"]) #stage=interaction, step=update trust based on outcome of stage
       self.datacollector = mesa.DataCollector(
         {
            "Gini": "compute_gini",
@@ -53,6 +54,7 @@ class TrustModel(mesa.Model):
         for i,a in enumerate(trustors):
             partner=trustees[i]
             a.partner=partner
+            print("Agent {} is trustor and interacting with trustee {}".format(a.id,partner.id))
 
         for i,a in enumerate(trustees):
             partner=trustors[i]
