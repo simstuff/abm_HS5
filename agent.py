@@ -19,24 +19,32 @@ class agent(mesa.Agent):
         self.last_partner_id=None
         self.neighbors=[] #to be initialized through grid
         self.memory=[0,0,0]#sum all elements in array and if 3 then change generlaized trust
+        self.security_level=np.random.uniform(low=1,high=3)
 
-    def step(self, partner):
-        self.last_partner_id=partner.id
-        self.check_wealth_update_trust()
-        trust_level=self.calculate_trust(partner) #believe
-        if self.wealth < 2*trust_level: #desire
-            self.send_money=False #intention
-        else:
-            self.send_money=True #send done in env
+    def step(self):
+        if self.type=="trustor":
+            self.last_partner_id=self.partner.id
+            self.check_wealth_update_trust()
+            trust_level=self.calculate_trust(self.partner) #believe
+            if self.wealth > self.security_level*trust_level: #desire
+                self.partner.wealth+=self.model.increase #intention
         
-        if sum(self.memory)==3:
-            change_prop=np.random.uniform()
-            if change_prop > 0.5: #zufällige Wsl für Änderung von generalized trust
-                self.generalized_trust=self.generalized_trust+self.generalized_trust*change_prop
-        if sum(self.memory)==0:
-            change_prop=np.random.uniform(low=-1,high=0)
-            if change_prop < -0.5: #zufällige Wsl für Änderung von generalized trust
-                self.generalized_trust=self.generalized_trust+self.generalized_trust*change_prop
+            if sum(self.memory)==3:
+                change_prop=np.random.uniform()
+                if change_prop > 0.5: #zufällige Wsl für Änderung von generalized trust
+                    self.generalized_trust=self.generalized_trust+self.generalized_trust*change_prop
+            if sum(self.memory)==0:
+                change_prop=np.random.uniform(low=-1,high=0)
+                if change_prop < -0.5: #zufällige Wsl für Änderung von generalized trust
+                    self.generalized_trust=self.generalized_trust+self.generalized_trust*change_prop
+
+        else:
+            if self.wealth > self.last_wealth:
+                trust_level=self.calculate_trust(self.partner) #believe
+                if self.wealth > self.security_level*trust_level: #desire
+                    self.partner.wealth+=self.model.increase #intention
+            
+
 
     #trust should be expressed as percentage to enable gradual sendings, send =1*trust, if < 0.5 no trust
     def calculate_trust(self):
