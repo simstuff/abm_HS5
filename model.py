@@ -21,7 +21,9 @@ class TrustModel(mesa.Model):
       prob = avg_node_degree /  num_nodes
       self.G = nx.erdos_renyi_graph(n=self.num_nodes, p=prob)
       self.grid = mesa.space.NetworkGrid(self.G)
-      self.schedule = mesa.time.StagedActivation(self,["interact","step"]) #stage=interaction, step=update trust based on outcome of stage
+      self.schedule = mesa.time.BaseScheduler(self) #stage=interaction, step=update trust based on outcome of stage
+
+#      self.schedule = mesa.time.StagedActivation(self,["interact","step"]) #stage=interaction, step=update trust based on outcome of stage
       self.datacollector = mesa.DataCollector(
         {
            "Gini": "compute_gini",
@@ -56,6 +58,8 @@ class TrustModel(mesa.Model):
             partner=trustees[i]
             a.partner=partner
             print("Agent {} is trustor and interacting with trustee {}".format(a.id,partner.id))
+            self.schedule.remove(a)
+            self.schedule.add(a)
 
         for i,a in enumerate(trustees):
             partner=trustors[i]
@@ -65,8 +69,7 @@ class TrustModel(mesa.Model):
         
          
         self.schedule.step()  
-        self.step_num+=1
-  
+        self.step_num+=1  
 
           
         #self.schedule.
