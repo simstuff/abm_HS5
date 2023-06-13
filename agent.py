@@ -1,7 +1,7 @@
 import mesa
 import numpy as np
 
-class agent(mesa.Agent):
+class TrustAgent(mesa.Agent):
     def __init__(self, id:int,model):
         super().__init__(id,model)
         self.id=id
@@ -82,8 +82,8 @@ class agent(mesa.Agent):
 
     def calculate_neighbor_info(self):
         self.info=0
-        self.neighbors=self.model.grid.get_neighbors(node_id=self.id, include_center=False, radius=1)
-
+        self.neighbors=self.model.grid.get_neighbors(node_id=self.id, include_center=False)
+        
         for n in self.neighbors:
             if n in self.percepts:
                 weight=self.percepts[n.id]
@@ -94,10 +94,11 @@ class agent(mesa.Agent):
             self.info=self.info/len(self.neighbors)
 
     def check_wealth_update_trust(self):
-        if self.last_wealth < self.wealth:
+        if self.last_wealth > self.wealth:
             change=np.random.uniform() #make change distr responsive?
             last_trust_value=self.percepts[self.partner]
             new_trust_value=last_trust_value-change*last_trust_value
+            self.center(new_trust_value)
             self.percepts[self.partner]=new_trust_value
             self.memory.append(0)
             print("Reduced trust")
@@ -106,13 +107,14 @@ class agent(mesa.Agent):
             change=np.random.uniform()
             last_trust_value=self.percepts[self.partner]
             new_trust_value=last_trust_value+change*last_trust_value
+            self.center(new_trust_value)
             self.percepts[self.partner]=new_trust_value
             self.memory.append(1)
             print("Increased trust")
 
-    def center(x): #keep values between -1 and 1
+    def center(self,x): #keep values between -1 and 1
         if x>=0:
             x=min(1,x)
         else:
             x=max(-1,x)
-
+        return x

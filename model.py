@@ -1,5 +1,5 @@
 import mesa
-from agent import agent
+from agent import TrustAgent
 #import numpy as np
 import networkx as nx
 
@@ -33,7 +33,7 @@ class TrustModel(mesa.Model):
         }
      )   
       for i,node in enumerate(self.G.nodes()):
-            a=agent(i,self)
+            a=TrustAgent(i,self)
             if i < self.num_nodes/2:
                 a.type="trustor"
             else:
