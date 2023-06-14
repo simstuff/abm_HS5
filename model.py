@@ -40,7 +40,7 @@ class TrustModel(mesa.Model):
                 a.type="trustee"
             self.schedule.add(a)
             self.grid.place_agent(a,node_id=node)
-            print(f"Agent placed: {a.id} in Node {node}" )
+            print(f"Agent placed: {a.unique_id} in Node {node}" )
 
     #scheduler to control agent steps
     def step(self):

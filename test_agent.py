@@ -12,6 +12,12 @@ class AgentTest(unittest.TestCase):
         for i,a in enumerate(Model.schedule.agent_buffer(shuffled=False)):
             print(i,a.type,a.wealth,a.generalized_trust,a.id)
 
+    def test_init(self):
+        Model = TrustModel(4,3,0.5)
+        for i,a in enumerate(Model.schedule.agent_buffer(shuffled=False)):
+            self.assertEqual(a.unique_id,i)
+
+
     def test_center(self):
         Agent = TrustAgent(1,2)
         self.assertEqual(Agent.center(0),0)
@@ -45,16 +51,23 @@ class AgentTest(unittest.TestCase):
         b=None
         for a in Model.schedule.agent_buffer(shuffled=False):
             a.percepts[b]=0.5
+            a.partner=b
             b=a
-        for i,a in enumerate(Model.schedule.agent_buffer(shuffled=False)):
+        for a in Model.schedule.agent_buffer(shuffled=False):
             a.calculate_neighbor_info()
             if a.info>=0:
                 test=True
             self.assertTrue(test)
+            print(a.unique_id)
             test=False
 
     def test_calculate_trust(self):
         A=TrustAgent(1,3)
         B=TrustAgent(2,3)
+
+        A.partner=B
         t_l=A.calculate_trust()
         self.assertEqual(t_l,A.generalized_trust)
+        A.info=1
+        t_l=A.calculate_trust()
+        self.assertEqual(A.percepts[A.partner.unique_id],t_l)
