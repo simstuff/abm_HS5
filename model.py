@@ -4,10 +4,12 @@ from agent import TrustAgent
 import networkx as nx
 
 def total_wealth(model):
-   total=0
-   for a in model.num_nodes:
+    total=0
+    for a in model.schedule.agent_buffer(shuffled=False):
       total+=a.wealth
-   return total
+    return total
+
+
 
 
 class TrustModel(mesa.Model):
