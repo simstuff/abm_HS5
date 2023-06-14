@@ -14,13 +14,11 @@ class TrustAgent(mesa.Agent):
         self.last_wealth=None
         self.model=model
         self.partner=None
-        self.last_partner=None
         self.neighbors=[] #to be initialized through grid
         self.memory=[]#sum all elements in array and if 3 then change generlaized trust
         self.security_level=np.random.uniform(low=1,high=1.5)
 
     def step(self):
-        self.last_partner=self.partner
         if self.last_wealth is not None: #to not execute check in first round
             self.check_wealth_update_trust()
             self.memory
