@@ -28,14 +28,12 @@ class TrustAgent(mesa.Agent):
         self.interact()
 
     def interact(self):
+        self.calculate_neighbor_info()
         trust_level=self.calculate_trust() #believe
 
         if self.type=="trustor":
             print("trustor acts")
             self.last_wealth=self.wealth
-            print("----",trust_level)
-            print(self.wealth)
-            print(self.wealth > self.security_level*trust_level)
             if self.wealth > self.security_level*trust_level: #desire
                 self.partner.wealth+=self.model.increase #intention
                 print("increased wealth")
@@ -65,13 +63,11 @@ class TrustAgent(mesa.Agent):
 
     #trust should be expressed as percentage to enable gradual sendings, send =1*trust, if < 0.5 no trust
     def calculate_trust(self):
-        if self.partner.id in self.percepts:
+        if self.partner in self.percepts:
             personalized_trust=self.percepts[self.partner]
-            self.info=self.calculate_neighbor_info()
             trust_level=(((self.generalized_trust+personalized_trust)/2)*(1-self.suspectability))+self.suspectability*self.info*(self.generalized_trust+personalized_trust)/2
 
         else:
-            self.calculate_neighbor_info()
             if self.info==0:
                 trust_level=self.generalized_trust
             else:
@@ -82,7 +78,7 @@ class TrustAgent(mesa.Agent):
 
     def calculate_neighbor_info(self):
         self.info=0
-        self.neighbors=self.model.grid.get_neighbors(node_id=self.id, include_center=False)
+        self.neighbors=self.model.grid.get_neighbors(node_id=self.id, include_center=False,radius=1)
         
         for n in self.neighbors:
             if n in self.percepts:
@@ -91,7 +87,7 @@ class TrustAgent(mesa.Agent):
                     self.info+=n.percepts[self.last_partner_id]*weight
 
         if self.info > 0:
-            self.info=self.info/len(self.neighbors)
+            self.info=self.info/len(self.neighbors) #averages info
 
     def check_wealth_update_trust(self):
         if self.last_wealth > self.wealth:

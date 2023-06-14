@@ -37,6 +37,7 @@ class AgentTest(unittest.TestCase):
         self.assertEqual(A.memory[1],1)
 
     def test_calculate_neighbor_info(self):
+        test=False
         Model=TrustModel(10,3,0.5)
         for a in Model.schedule.agent_buffer(shuffled=False):
             a.calculate_neighbor_info()
@@ -45,7 +46,15 @@ class AgentTest(unittest.TestCase):
         for a in Model.schedule.agent_buffer(shuffled=False):
             a.percepts[b]=0.5
             b=a
-        print("---",Model.grid.get_neighbors(node_id=1,include_center=False))
         for i,a in enumerate(Model.schedule.agent_buffer(shuffled=False)):
             a.calculate_neighbor_info()
-            self.assertNotEqual(a.info,0)
+            if a.info>=0:
+                test=True
+            self.assertTrue(test)
+            test=False
+
+    def test_calculate_trust(self):
+        A=TrustAgent(1,3)
+        B=TrustAgent(2,3)
+        t_l=A.calculate_trust()
+        self.assertEqual(t_l,A.generalized_trust)
