@@ -9,7 +9,41 @@ def total_wealth(model):
       total+=a.wealth
     return total
 
+def personalized_trust_per_agent(model):
+    values={}
+    for a in model.schedule.agent_buffer(shuffled=True):
+        values[a.unique_id]=a.percepts
+    return values
 
+def get_gtrusting(model):
+    count=0
+    for a in model.schedule.agent_buffer(shuffled=True):
+        if a.generalized_trust > 0:
+            count+=1
+    return count
+
+def get_gmistrusting(model):
+    count=0
+    for a in model.schedule.agent_buffer(shuffled=True):
+        if a.generalized_trust < 0:
+            count+=1
+    return count
+
+def get_avg_ptrust(model):
+    values=personalized_trust_per_agent(model)
+    total=[]
+    for val in values.values():
+        for v in val:
+            total.append(v.values())
+    sum=sum(total)/len(total)
+    return sum
+
+def get_avg_gtrust(model):
+    count=[]
+    for a in model.schedule.agent_buffer(shuffled=True):
+        count.append(a)
+    count=sum(count)/len(count)
+    return count
 
 
 class TrustModel(mesa.Model):
@@ -28,10 +62,13 @@ class TrustModel(mesa.Model):
 #      self.schedule = mesa.time.StagedActivation(self,["interact","step"]) #stage=interaction, step=update trust based on outcome of stage
       self.datacollector = mesa.DataCollector(
         {
-           "Gini": "compute_gini",
-           "Wealth": "wealth",
-           "Perosnalized Trust":"trust",
-           "Atributes":"attributes",
+           "Wealth": total_wealth,
+           "PersonalizedTrust":personalized_trust_per_agent,
+           "GeneralizedTrustingAgents":get_gtrusting,
+           "GeneralizedMistrustingAgents":get_gmistrusting,
+           "AvgPersonalizedTrust":get_avg_ptrust,
+           "AvgGeneralizedTrust":get_avg_gtrust
+           #"Atributes":"attributes",possible extensions
         }
      )   
       for i,node in enumerate(self.G.nodes()):
@@ -72,10 +109,4 @@ class TrustModel(mesa.Model):
          
         self.schedule.step()  
         self.step_num+=1  
-
-          
-        #self.schedule.
-        #self.datacollector.collect(self)
-        # #self.schedule.step()
-
-#random scheduler -> get list of agents by get all cell contennts of network grid
+        self.datacollector.collect(self)
