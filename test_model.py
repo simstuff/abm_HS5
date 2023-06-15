@@ -5,12 +5,12 @@ import unittest
 class ModelTest(unittest.TestCase):
     
     def test_init(self):
-        Model = TrustModel(num_nodes=4)
+        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5)
         print(Model.G.nodes())
         self.assertEqual(len(Model.G.nodes()),4)
 
     def test_assign_trust_type(self):
-        Model = TrustModel(num_nodes=4)
+        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5)
         trustees = []
         trustors = []
         for i,a in enumerate(Model.schedule.agent_buffer(shuffled=True)):
@@ -23,7 +23,7 @@ class ModelTest(unittest.TestCase):
         self.assertNotEqual(trustees,trustors)
 
     def test_assign_partners(self):
-        Model = TrustModel(num_nodes=4)
+        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5)
         trustees = []
         trustors = []
         for i,a in enumerate(Model.schedule.agent_buffer(shuffled=True)):

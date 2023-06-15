@@ -32,24 +32,27 @@ def get_gmistrusting(model):
 def get_avg_ptrust(model):
     values=personalized_trust_per_agent(model)
     total=[]
+    tmp=[]
     for val in values.values():
         for v in val:
-            total.append(v.values())
-    sum=sum(total)/len(total)
-    return sum
+            tmp.append(v)
+        total.append(sum(tmp)/len(tmp))
+    total=sum(total)/len(total)
+    return total
 
 def get_avg_gtrust(model):
     count=[]
     for a in model.schedule.agent_buffer(shuffled=True):
-        count.append(a)
+        count.append(a.generalized_trust)
     count=sum(count)/len(count)
     return count
 
 
 class TrustModel(mesa.Model):
-    def __init__(self, num_nodes:int,increase:int,change_threshold:float): #different graphs to initialize network?
+    def __init__(self, num_nodes:int,increase:float,change_threshold:float,decrease:float): #different graphs to initialize network?
       self.seed=42
       self.increase=increase
+      self.decrease=decrease
       self.change_threshold=change_threshold
       avg_node_degree=3
       self.step_num=0
@@ -96,7 +99,7 @@ class TrustModel(mesa.Model):
         for i,a in enumerate(trustors):
             partner=trustees[i]
             a.partner=partner
-            print("Agent {} is trustor and interacting with trustee {}".format(a.id,partner.id))
+            print("Agent {} is trustor and interacting with trustee {}".format(a.unique_id,partner.unique_id))
             self.schedule.remove(a)
             self.schedule.add(a)
 
@@ -107,6 +110,9 @@ class TrustModel(mesa.Model):
             self.schedule.add(a) #add all trustees in end of schedule to execite only after action of trustors
         
          
-        self.schedule.step()  
+        self.schedule.step() 
+        for i,a in enumerate(self.schedule.agent_buffer(shuffled=True)):
+            a.wealth-=1
+
         self.step_num+=1  
         self.datacollector.collect(self)
