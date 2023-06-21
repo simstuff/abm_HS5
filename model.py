@@ -116,7 +116,7 @@ class TrustModel(mesa.Model):
          
         self.schedule.step() 
         for i,a in enumerate(self.schedule.agent_buffer(shuffled=True)):
-            a.wealth-=1
+            a.wealth-=self.decrease
 
         self.step_num+=1  
         self.datacollector.collect(self)
