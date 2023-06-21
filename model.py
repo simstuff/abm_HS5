@@ -34,16 +34,19 @@ def get_avg_ptrust(model):
     total=[]
     tmp=[]
     if bool(values):
-        return 0
-    else:
-        for val in values.values():
-            for v in val.values():
-                t=sum(v)
-                tmp.append(t)
-            total.append(sum(tmp)/len(tmp))
+        for val in values.values():#get each trust dict
+            for v in val.values():#get list of trust values
+                tmp.append(sum(v)) 
+            try:
+                total.append(sum(tmp)/len(tmp))
+            except ZeroDivisionError:
+                print("division by zero")
         total=sum(total)/len(total)
         return total
+    else:
+        return 0
 
+       
 def get_avg_gtrust(model):
     count=[]
     for a in model.schedule.agent_buffer(shuffled=True):
@@ -118,5 +121,6 @@ class TrustModel(mesa.Model):
         for i,a in enumerate(self.schedule.agent_buffer(shuffled=True)):
             a.wealth-=self.decrease
 
-        self.step_num+=1  
-        self.datacollector.collect(self)
+        self.step_num+=1
+        if self.step_num > 1:  
+            self.datacollector.collect(self)

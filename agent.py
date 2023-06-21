@@ -52,9 +52,9 @@ class TrustAgent(mesa.Agent):
                     self.generalized_trust=self.center(self.generalized_trust)
 
                 if sum(self.memory[-3:])==0:
-                    change_prop=np.random.uniform(low=-1,high=0)
-                    if change_prop < -1*self.model.change_threshold: #zufällige Wsl für Änderung von generalized trust
-                        self.generalized_trust=self.generalized_trust+self.generalized_trust*change_prop
+                    change_prop=np.random.uniform()
+                    if change_prop < self.model.change_threshold: #zufällige Wsl für Änderung von generalized trust
+                        self.generalized_trust=self.generalized_trust+self.generalized_trust*-1*change_prop
                         self.generalized_trust=self.center(self.generalized_trust)
 
        
