@@ -1,5 +1,6 @@
 import mesa
 import numpy as np
+from math import fsum
 
 class TrustAgent(mesa.Agent):
     def __init__(self, id:int,model):
@@ -21,16 +22,17 @@ class TrustAgent(mesa.Agent):
     def step(self):
         if self.last_wealth is not None: #to not execute check in first round
             self.check_wealth_update_trust()
-            self.memory
+        self.last_wealth=self.wealth
         self.interact()
+
 
     def interact(self):
         self.calculate_neighbor_info()
         trust_level=self.calculate_trust() #believe
+        self.last_wealth=self.wealth
 
         if self.type=="trustor":
             print("trustor acts")
-            self.last_wealth=self.wealth
             if self.wealth > self.security_level*trust_level: #desire
                 self.partner.wealth+=self.model.increase #intention
                 print("increased wealth")
@@ -61,7 +63,9 @@ class TrustAgent(mesa.Agent):
     #trust should be expressed as percentage to enable gradual sendings, send =1*trust, if < 0.5 no trust
     def calculate_trust(self):
         if self.partner.unique_id in self.percepts:
-            personalized_trust=self.percepts[self.partner.unique_id]
+            personalized_trust=self.percepts.get(self.partner.unique_id)
+            if isinstance(personalized_trust,list):
+                personalized_trust=fsum(personalized_trust)/len(personalized_trust)
             trust_level=(((self.generalized_trust+personalized_trust)/2)*(1-self.suspectability))+self.suspectability*self.info*(self.generalized_trust+personalized_trust)/2
 
         else:
@@ -69,7 +73,7 @@ class TrustAgent(mesa.Agent):
                 trust_level=self.generalized_trust
             else:
                 trust_level=((self.generalized_trust)*(1-self.suspectability))+self.suspectability*self.info*(self.generalized_trust)
-            self.percepts[self.partner.unique_id]=trust_level
+            #self.percepts[self.partner.unique_id]=trust_level
 
         return trust_level
 
@@ -85,35 +89,38 @@ class TrustAgent(mesa.Agent):
             
             for a in self.model.schedule.agent_buffer(shuffled=False):
                 if a.unique_id in self.neighbors:
-                    if self.partner in a.percepts:
-                        self.info+=a.percepts[self.partner.unique_id]*weight
+                    if self.partner in a.percepts and self.partner is not None:
+                        self.info+=fsum(a.percepts[self.partner.unique_id])*weight
         
 
         if self.info > 0:
             self.info=self.info/len(self.neighbors) #averages info
 
     def check_wealth_update_trust(self):
-        if self.last_wealth > self.wealth:
-            change=np.random.uniform() #make change distr responsive?
-            if self.partner.unique_id in self.percepts:
-                last_trust_value=self.percepts[self.partner.unique_id]
-            else:
-                last_trust_value=self.generalized_trust
-            new_trust_value=last_trust_value-change*last_trust_value
+        change=np.random.uniform() 
+        #get last_trust_values
+        if self.partner.unique_id in self.percepts:
+            last_trust_value=self.percepts.get(self.partner.unique_id)
+            print("--id--",last_trust_value)
+        else: #include forgetting through if len(last_tr_v)>5: last_trsut_v[-1]= else append
+            last_trust_value=self.generalized_trust
+            last_trust_value=list([float(last_trust_value)])
+
+        trust_value=fsum(last_trust_value)/len(last_trust_value)        
+
+        if self.last_wealth > self.wealth: 
+            new_trust_value=trust_value-change*trust_value
             self.center(new_trust_value)
-            self.percepts[self.partner.unique_id]=new_trust_value
+            last_trust_value.append(new_trust_value)
+            self.percepts[self.partner.unique_id]=last_trust_value
             self.memory.append(0)
             print("Reduced trust")
         
         else:
-            change=np.random.uniform()
-            if self.partner.unique_id in self.percepts:
-                last_trust_value=self.percepts[self.partner.unique_id]
-            else:
-                last_trust_value=self.generalized_trust            
-            new_trust_value=last_trust_value+change*last_trust_value
+            new_trust_value=trust_value+change*trust_value
             self.center(new_trust_value)
-            self.percepts[self.partner.unique_id]=new_trust_value
+            last_trust_value.append(new_trust_value)
+            self.percepts[self.partner.unique_id]=last_trust_value
             self.memory.append(1)
             print("Increased trust")
 

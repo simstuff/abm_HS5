@@ -11,7 +11,7 @@ def total_wealth(model):
 
 def personalized_trust_per_agent(model):
     values={}
-    for a in model.schedule.agent_buffer(shuffled=True):
+    for a in model.schedule.agent_buffer(shuffled=False):
         values[a.unique_id]=a.percepts
     return values
 
@@ -33,12 +33,16 @@ def get_avg_ptrust(model):
     values=personalized_trust_per_agent(model)
     total=[]
     tmp=[]
-    for val in values.values():
-        for v in val:
-            tmp.append(v)
-        total.append(sum(tmp)/len(tmp))
-    total=sum(total)/len(total)
-    return total
+    if bool(values):
+        return 0
+    else:
+        for val in values.values():
+            for v in val.values():
+                t=sum(v)
+                tmp.append(t)
+            total.append(sum(tmp)/len(tmp))
+        total=sum(total)/len(total)
+        return total
 
 def get_avg_gtrust(model):
     count=[]

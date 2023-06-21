@@ -22,6 +22,54 @@ wealth_chart=mesa.visualization.ChartModule(
     ]
 )
 
+def network_portrayal(G):
+    # The model ensures there is always 1 agent per node
+
+    def node_color(agent):
+        if agent.generalized_trust<0:
+            return "#FF0000"
+        else:
+            return "#008000"
+      
+    def edge_color(agent1, agent2):
+        ptrust1=agent1.percepts[agent2]
+        ptrust2=agent2.percepts[agent1]
+        ptrust=(ptrust1+ptrust2)/2
+        if ptrust<0:
+            return  "#FF0000"
+        else:
+            return  "#008000"
+
+    def edge_width(agent1, agent2):
+        return 0
+
+    def get_agents(source, target):
+        return G.nodes[source]["agent"][0], G.nodes[target]["agent"][0]
+
+    portrayal = dict()
+    portrayal["nodes"] = [
+        {
+            "size": 6,
+            "color": node_color(agents[0]),
+            "tooltip": f"id: {agents[0].unique_id}<br>gTrust: {agents[0].generalized_trust}",
+        }
+        for (_, agents) in G.nodes.data("agent")
+    ]
+
+    portrayal["edges"] = [
+        {
+            "source": source,
+            "target": target,
+            "color": edge_color(*get_agents(source, target)),
+            "width": edge_width(*get_agents(source, target)),
+        }
+        for (source, target) in G.edges
+    ]
+
+    return portrayal
+
+network=mesa.visualization.NetworkModule(portrayal_method=network_portrayal)
+
 model_params={
     "num_nodes":mesa.visualization.Slider(name="num_nodes", value=50,min_value=10,max_value=100,step=2,description="number of nodes in network, must be even"),
     "increase":mesa.visualization.Slider(name="Wealth-Increase",value=3,min_value=1.5,max_value=10,step=0.5,description="amount by which welath is increased when agent trusts"),
