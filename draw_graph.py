@@ -2,7 +2,7 @@ import networkx as nx
 import pandas as pd
 import matplotlib.pyplot as plt
 
-df=pd.read_csv("/home/niklas/Studium_Uni_Bamberg/Semester4/PWM-PT-HS5/abm_HS5/graph_data.csv")
+df=pd.read_csv("graph_data.csv")
 #G=nx.from_pandas_edgelist(df)
 
 import pickle
