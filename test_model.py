@@ -5,12 +5,12 @@ import unittest
 class ModelTest(unittest.TestCase):
     
     def test_init(self):
-        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5,decrease=0)
+        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5,decrease=0,memory=4)
         print(Model.G.nodes())
         self.assertEqual(len(Model.G.nodes()),4)
 
     def test_assign_trust_type(self):
-        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5,decrease=0)
+        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5,decrease=0,memory=4)
         trustees = []
         trustors = []
         for i,a in enumerate(Model.schedule.agent_buffer(shuffled=True)):
@@ -23,7 +23,7 @@ class ModelTest(unittest.TestCase):
         self.assertNotEqual(trustees,trustors)
 
     def test_assign_partners(self):
-        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5,decrease=0)
+        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5,decrease=0,memory=4)
         trustees = []
         trustors = []
         for i,a in enumerate(Model.schedule.agent_buffer(shuffled=True)):
@@ -41,14 +41,14 @@ class ModelTest(unittest.TestCase):
 
 
     def test_get_avg_trust(self):
-        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5,decrease=0)
+        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5,decrease=0,memory=4)
         for i,a in enumerate(Model.schedule.agent_buffer(shuffled=True)):
             a.wealth=1
         tmp=total_wealth(Model)
         self.assertEqual(4,tmp)
         
     def test_personalized_trust_per_agent(self):
-        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5,decrease=0)
+        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5,decrease=0,memory=4)
         count=0
         for i,a in enumerate(Model.schedule.agent_buffer(shuffled=True)):
             for b in Model.schedule.agent_buffer():
@@ -67,7 +67,7 @@ class ModelTest(unittest.TestCase):
             
 
     def test_percepts_are_lists(self):
-        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5,decrease=0)
+        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5,decrease=0,memory=4)
         Model.step()
         tmp=personalized_trust_per_agent(Model)
         for val in tmp.values():
@@ -75,13 +75,11 @@ class ModelTest(unittest.TestCase):
                 self.assertIsInstance(v,list)
 
     def test_avg_ptrust(self):
-        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5,decrease=0)
+        Model = TrustModel(num_nodes=4,increase=3,change_threshold=0.5,decrease=0,memory=4)
         b=None
-        count=0
         for i,a in enumerate(Model.schedule.agent_buffer(shuffled=True)):
             if b is not None:
                 a.percepts[b]=[1.0,1.0,1.5,1]
-                count+=1
             b=a
         total=4.5
         avg_ptrust=get_avg_ptrust(Model)

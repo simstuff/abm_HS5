@@ -18,6 +18,7 @@ class TrustAgent(mesa.Agent):
         self.neighbors=[] #to be initialized through grid
         self.memory=[]#sum all elements in array and if 3 then change generlaized trust
         self.security_level=np.random.uniform(low=1,high=1.5)
+        self.memory_span=np.random.uniform(low=1,high=self.model.memory) #draw from prob dstr
 
     def step(self):
         if self.last_wealth is not None: #to not execute check in first round
@@ -44,14 +45,14 @@ class TrustAgent(mesa.Agent):
                 self.wealth-=self.model.increase/2
                 print("decreased wealth")
 
-        if len(self.memory) > 3:
-            if sum(self.memory[-3:])==3:
+        if len(self.memory) > self.model.memory:
+            if sum(self.memory[-self.model.memory:])==self.model.memory:
                 change_prop=np.random.uniform()
                 if change_prop > self.model.change_threshold: #zufällige Wsl für Änderung von generalized trust
                     self.generalized_trust=self.generalized_trust+self.generalized_trust*change_prop
                     self.generalized_trust=self.center(self.generalized_trust)
 
-                if sum(self.memory[-3:])==0:
+                if sum(self.memory[-self.model.memory:])==0:
                     change_prop=np.random.uniform()
                     if change_prop < self.model.change_threshold: #zufällige Wsl für Änderung von generalized trust
                         self.generalized_trust=self.generalized_trust+self.generalized_trust*-1*change_prop
@@ -73,8 +74,7 @@ class TrustAgent(mesa.Agent):
                 trust_level=self.generalized_trust
             else:
                 trust_level=((self.generalized_trust)*(1-self.suspectability))+self.suspectability*self.info*(self.generalized_trust)
-            #self.percepts[self.partner.unique_id]=trust_level
-
+                
         return trust_level
 
     def calculate_neighbor_info(self):

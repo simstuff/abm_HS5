@@ -1,6 +1,6 @@
 import mesa
 from agent import TrustAgent
-#import numpy as np
+import pandas as pd
 import networkx as nx
 
 #Model level data collectors
@@ -81,11 +81,12 @@ def get_security_level(agent):
     
 
 class TrustModel(mesa.Model):
-    def __init__(self, num_nodes:int,increase:float,change_threshold:float,decrease:float,memory:int): #different graphs to initialize network?
+    def __init__(self, num_nodes:int,increase:float,change_threshold:float,decrease:float,memory:int,run_time:int): #different graphs to initialize network?
         self.seed=42
         self.increase=increase
         self.decrease=decrease
         self.memory=memory
+        self.run_time=run_time
         self.change_threshold=change_threshold
         avg_node_degree=3
         self.step_num=0
@@ -162,4 +163,22 @@ class TrustModel(mesa.Model):
         if self.step_num > 1:  
             self.datacollector.collect(self)
 
- 
+    
+    def run_model(self):
+        for i in range(self.run_time):
+            self.step()
+
+model_params={
+    "num_nodes":[10,50,100],
+    "increase":[1.5,3,10],
+    "change_threshold":[0.25,0.5,0.75],
+    "decrease":[0,1,10],
+    "memory":[1,3,10]
+}
+if __name__ == "__main__":
+    data = mesa.batch_run(
+        TrustModel,
+        model_params,
+    )
+    br_df = pd.DataFrame(data)
+    br_df.to_csv("TrustModel_Data.csv")
