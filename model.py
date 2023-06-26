@@ -1,7 +1,9 @@
 import mesa
 from agent import TrustAgent
-#import numpy as np
 import networkx as nx
+import pandas as pd
+import pickle
+import matplotlib.pyplot as plt
 
 #Model level data collectors
 
@@ -67,8 +69,12 @@ def get_info(agent):
 def get_generalized_trust(agent):
     return agent.generalized_trust
     
-def get_personalized_trust(agent):
-    return agent.percepts[agent.partner.unique_id]  
+def get_personalized_trust(agent,partner=None):
+    if partner is not None:
+        v_list=agent.percepts[partner] 
+    else:
+        v_list=agent.percepts[agent.partner.unique_id] 
+    return  sum(v_list)/len(v_list)
     
 def get_suspectability(agent):
     return agent.suspectability
@@ -78,6 +84,28 @@ def get_id(agent):
     
 def get_security_level(agent):
     return agent.security_level
+
+#Make df from edges to store in csv
+def make_edge_df(G):
+    edges = {}
+    for source, target, attribute in G.edges(data=True):
+
+        if not edges.get('source'):
+            edges['source'] = [source]
+        else:
+            edges['source'].append(source)
+
+        if not edges.get('target'):
+            edges['target'] = [target]
+        else:
+            edges['target'].append(target)
+
+        for key, value in attribute.items():
+            if not edges.get(key):
+                edges[key] = [value]
+            else:
+                edges[key].append(value)
+    return pd.DataFrame(edges)
     
 
 class TrustModel(mesa.Model):
@@ -88,10 +116,11 @@ class TrustModel(mesa.Model):
         self.memory=memory
         self.change_threshold=change_threshold
         avg_node_degree=3
+        self.edge_count=0
         self.step_num=0
         self.num_nodes = num_nodes
         prob = avg_node_degree /  num_nodes
-        self.MG=nx.MultiDiGraph()
+        self.DG=nx.DiGraph()
         self.G = nx.erdos_renyi_graph(n=self.num_nodes, p=prob)
         self.grid = mesa.space.NetworkGrid(self.G)
         self.schedule = mesa.time.BaseScheduler(self) #stage=interaction, step=update trust based on outcome of stage
@@ -153,13 +182,44 @@ class TrustModel(mesa.Model):
         
          
         self.schedule.step() 
-        for i,a in enumerate(self.schedule.agent_buffer(shuffled=True)):
+        for a in self.schedule.agent_buffer(shuffled=True):
             a.wealth-=self.decrease
+            #grow multigraph for future analysis
             for key in a.percepts.keys():
-                self.MG.add_edge(a.unique_id,key)
+                if self.DG.has_edge(a.unique_id,key):
+                    weight=get_personalized_trust(a,partner=key)
+                    self.DG[a.unique_id][key].update({"weight": weight})
+                else:
+                    self.edge_count+=1
+                    weight=get_personalized_trust(a,partner=key)
+                    self.DG.add_edge(a.unique_id,key,weight=weight)
+                graph_data=nx.to_dict_of_dicts(self.DG)
+                with open('graph_data.pickle', 'wb') as handle:
+                    pickle.dump(graph_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                
+                df=make_edge_df(self.DG)
+                df.to_csv("graph_data.csv")
             
         self.step_num+=1
         if self.step_num > 1:  
             self.datacollector.collect(self)
+            agent_data=self.datacollector.get_agent_vars_dataframe()
+            model_data=self.datacollector.get_model_vars_dataframe()
+            agent_data.to_csv("agent_data.csv")
+            model_data.to_csv("model_data.csv")
 
- 
+        if self.step_num==10:
+            pos=nx.spring_layout(self.DG,seed=5)
+            fig, ax = plt.subplots()
+            nx.draw(self.DG, pos)
+            edge_labels=dict([((u,v,),d['weight'])
+                for u,v,d in self.DG.edges(data=True)])
+            nx.draw_networkx_edge_labels(self.DG, pos, edge_labels=edge_labels, label_pos=0.3, font_size=7)
+            plt.show()
+
+#draw edge width based on personalized trust value to improve readability
+
+
+
+
+
