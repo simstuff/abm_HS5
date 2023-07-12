@@ -102,5 +102,7 @@ model_params={
     "change_threshold":mesa.visualization.Slider(name="Change_threshold",value=0.5,max_value=1,min_value=0.1,step=0.1,description="Probability to induce change of generalized trust"),
     "decrease":mesa.visualization.Slider(name="decrease",value=1,min_value=0,max_value=10, step=1,description="decrease of agents welath per model step"),
     "memory":mesa.visualization.Slider(name="memory",value=3,min_value=1,max_value=10,step=1,description="determines how many steps agent interactions are remembered by each agent,upper bound of uniform distribution"),
+    "max_step":mesa.visualization.Slider(name="max_step",value=100,min_value=1,max_value=1000,step=1,description="end of simulation if steo = max_step"),
+
 }
 server = mesa.visualization.ModularServer(model_cls=TrustModel,visualization_elements=[network,wealth_chart,trust_chart,avg_gen_trust_chart,avg_ptrust_chart],name="TrustModel",model_params=model_params ,port=8080)
