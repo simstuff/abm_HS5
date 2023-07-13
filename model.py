@@ -71,11 +71,11 @@ def get_generalized_trust(agent):
     return agent.generalized_trust
     
 def get_personalized_trust(agent,partner=None):
-    if partner is not None:
-        v_list=agent.percepts[partner] 
+    if partner in agent.percepts:
+        v_list=sum(agent.percepts[partner])/len(agent.percepts[partner])
     else:
-        v_list=agent.percepts[agent.partner.unique_id] 
-    return  sum(v_list)/len(v_list)
+        v_list=0
+    return  v_list
     
 def get_suspectability(agent):
     return agent.suspectability
@@ -106,7 +106,7 @@ def make_edge_df(G):
                 edges[key] = [value]
             else:
                 edges[key].append(value)
-    return edges
+    return pd.DataFrame(edges)
     
 
 class TrustModel(mesa.Model):
@@ -121,9 +121,9 @@ class TrustModel(mesa.Model):
         self.step_num=0
         self.num_nodes = num_nodes
         prob = avg_node_degree /  num_nodes
-        self.DG=nx.DiGraph()
-        self.G = nx.erdos_renyi_graph(n=self.num_nodes, p=prob)
-        self.grid = mesa.space.NetworkGrid(self.G)
+        self.G=nx.DiGraph()
+        #self.G = nx.erdos_renyi_graph(n=self.num_nodes, p=prob)
+        #self.grid = mesa.space.NetworkGrid(self.G)
         self.schedule = mesa.time.BaseScheduler(self) #stage=interaction, step=update trust based on outcome of stage
         self.max_step=max_step
 
@@ -147,16 +147,25 @@ class TrustModel(mesa.Model):
             #"Atributes":"attributes",possible extensions
         }
      )   
-        for i,node in enumerate(self.G.nodes()):
+        #for i,node in enumerate(self.G.nodes()):
+         #   a=TrustAgent(i,self)
+          #  if i < self.num_nodes/2:
+           #     a.type="trustor"
+            #else:
+             #   a.type="trustee"
+            #self.schedule.add(a)
+            #self.grid.place_agent(a,node_id=node)
+            #print(f"Agent placed: {a.unique_id} in Node {node}" )
+
+        for i in range(self.num_nodes):
             a=TrustAgent(i,self)
             if i < self.num_nodes/2:
                 a.type="trustor"
             else:
                 a.type="trustee"
             self.schedule.add(a)
-            self.grid.place_agent(a,node_id=node)
-            print(f"Agent placed: {a.unique_id} in Node {node}" )
-
+            self.G.add_node(a.unique_id)
+        print(self.G)
     #scheduler to control agent steps
     def step(self):
         trustees = []
@@ -168,52 +177,60 @@ class TrustModel(mesa.Model):
             else:
                 a.type="trustee"
                 trustors.append(a)
-         
-        for i,a in enumerate(trustors):
-            partner=trustees[i]
-            a.partner=partner
-            print("Agent {} is trustor and interacting with trustee {}".format(a.unique_id,partner.unique_id))
-            self.schedule.remove(a)
-            self.schedule.add(a)
 
         for i,a in enumerate(trustees):
             partner=trustors[i]
             a.partner=partner
+            if self.G.has_edge(a.unique_id,partner.unique_id):
+                weight=get_personalized_trust(a,partner=partner.unique_id)
+                info=get_info(a)      
+                self.G[a.unique_id][partner.unique_id].update({"info":info})
+                self.G[a.unique_id][partner.unique_id].update({"weight": weight})
+            else:
+                weight=get_personalized_trust(a,partner=partner.unique_id)
+                info=get_info(a)      
+                self.G.add_edge(a.unique_id,partner.unique_id,weight=weight,info=info)
             self.schedule.remove(a) #remove all trustees from schedule
             self.schedule.add(a) #add all trustees in end of schedule to execite only after action of trustors
-        
          
+        for i,a in enumerate(trustors):
+            partner=trustees[i]
+            a.partner=partner
+            if self.G.has_edge(a.unique_id,partner.unique_id):
+                weight=get_personalized_trust(a,partner=partner.unique_id)
+                info=get_info(a)      
+                self.G[a.unique_id][partner.unique_id].update({"info":info})
+                self.G[a.unique_id][partner.unique_id].update({"weight": weight})
+            else:
+                weight=get_personalized_trust(a,partner=partner.unique_id)
+                info=get_info(a)      
+                self.G.add_edge(a.unique_id,partner.unique_id,weight=weight,info=info)
+            print("Agent {} is trustor and interacting with trustee {}".format(a.unique_id,partner.unique_id))
+            self.schedule.remove(a)
+            self.schedule.add(a)
+        
+        print(self.G)
+        
         self.schedule.step() 
 
-        #create network df
-        network_data={}
 
         for a in self.schedule.agent_buffer(shuffled=True):
             a.wealth-=self.decrease
 
             #grow DiGraph for future analysis
             
-            for key in a.percepts.keys():
-                if self.DG.has_edge(a.unique_id,key):
-                    weight=get_personalized_trust(a,partner=key)
-                    info=get_info(a)      
-                    self.DG[a.unique_id][key]["info"]=info
-                    self.DG[a.unique_id][key].update({"weight": weight})
-                else:
-                    self.edge_count+=1
-                    weight=get_personalized_trust(a,partner=key)
-                    info=get_info(a)      
-                    self.DG.add_edge(a.unique_id,key,weight=weight,info=info)
-                graph_data=nx.to_dict_of_dicts(self.DG)
-                with open('graph_data.pickle', 'wb') as handle:
-                    pickle.dump(graph_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
-                
-                df1=make_edge_df(self.DG)
-                df1["step"]=self.step_num
-                print(df1)
-                network_data.update(df1)
-        df=pd.DataFrame(network_data)
-        df.to_csv("graph_data.csv")
+           
+
+            df=make_edge_df(self.G)
+            df["step"]=self.step_num
+            path="graphs/"+str(self.step_num)+"_graph_data"+".csv"
+            df.to_csv(path)
+
+                #safe in picke file
+                #graph_data=nx.to_numpy_array(self.DG)
+                #path="pickled_graphs/graph_data_"+str(self.step_num)+".pickle"
+                #with open(path, 'wb') as handle:
+                #    pickle.dump(graph_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
             
         self.step_num+=1
         if self.step_num > 1:  
@@ -223,7 +240,6 @@ class TrustModel(mesa.Model):
             agent_data.to_csv("agent_data.csv")
             model_data.to_csv("model_data.csv")
         
-        print(self.max_step)
         if self.step_num==self.max_step:
             sys.exit()      
 

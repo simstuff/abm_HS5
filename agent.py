@@ -7,7 +7,7 @@ class TrustAgent(mesa.Agent):
         super().__init__(id,model)
         self.generalized_trust=np.random.normal(loc=0.0,scale=0.5,size=None)
         self.wealth=np.random.uniform(low=1,high=10) #pareto distribution for wealth
-        self.type=None
+        self.type=""
         self.send_money=False
         self.info=0 #sum of info from neighbors
         self.suspectability=np.random.uniform(low=0,high=1.0)
@@ -36,14 +36,14 @@ class TrustAgent(mesa.Agent):
             print("trustor acts")
             if self.wealth > self.security_level*trust_level: #desire
                 self.partner.wealth+=self.model.increase #intention
-                print("increased wealth")
+                #print("increased wealth")
             
         else:
             print("trustee acts")
             if self.wealth > self.security_level*trust_level: #desire
                 self.partner.wealth+=self.model.increase/2 #intention
                 self.wealth-=self.model.increase/2
-                print("decreased wealth")
+                #print("decreased wealth")
 
         if len(self.memory) > self.model.memory:
             if sum(self.memory[-self.model.memory:])==self.model.memory:
@@ -79,29 +79,32 @@ class TrustAgent(mesa.Agent):
 
     def calculate_neighbor_info(self):
         self.info=0
-        self.neighbors=self.model.grid.get_neighbors(node_id=self.unique_id, include_center=False,radius=1)
-        
+        #self.neighbors=self.model.grid.get_neighbors(node_id=self.unique_id, include_center=False,radius=1)
+        self.neighbors=self.model.G.neighbors(self.unique_id)
+        i=0
         for n in self.neighbors:
+            i+=1
             if n in self.percepts:
-                    weight=self.percepts[n]
+                weight=fsum(self.percepts[n])/len(self.percepts[n])
             else:
                 weight=self.generalized_trust
             
             for a in self.model.schedule.agent_buffer(shuffled=False):
                 if a.unique_id in self.neighbors:
-                    if self.partner in a.percepts and self.partner is not None:
+                    if self.partner.unique_id in a.percepts: #and self.partner is not None:
                         self.info+=fsum(a.percepts[self.partner.unique_id])*weight
-        
 
         if self.info > 0:
-            self.info=self.info/len(self.neighbors) #averages info
+            self.info=self.info/i #averages info
+            self.info=self.center(self.info)
+        print(self.info)
 
     def check_wealth_update_trust(self):
         change=np.random.uniform() 
         #get last_trust_values
         if self.partner.unique_id in self.percepts:
             last_trust_value=self.percepts.get(self.partner.unique_id)
-            print("--id--",last_trust_value)
+            #print("--id--",last_trust_value)
         else: #include forgetting through if len(last_tr_v)>5: last_trsut_v[-1]= else append
             last_trust_value=self.generalized_trust
             last_trust_value=list([float(last_trust_value)])
@@ -114,7 +117,7 @@ class TrustAgent(mesa.Agent):
             last_trust_value.append(new_trust_value)
             self.percepts[self.partner.unique_id]=last_trust_value
             self.memory.append(0)
-            print("Reduced trust")
+            #print("Reduced trust")
         
         else:
             new_trust_value=trust_value+change*trust_value
@@ -122,7 +125,7 @@ class TrustAgent(mesa.Agent):
             last_trust_value.append(new_trust_value)
             self.percepts[self.partner.unique_id]=last_trust_value
             self.memory.append(1)
-            print("Increased trust")
+            #print("Increased trust")
 
     def center(self,x): #keep values between -1 and 1
         if x>=0:
