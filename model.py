@@ -72,7 +72,7 @@ def get_generalized_trust(agent):
     
 def get_personalized_trust(agent,partner=None):
     if partner in agent.percepts:
-        v_list=sum(agent.percepts[partner])/len(agent.percepts[partner])
+        v_list=sum(agent.percepts[partner])/len(agent.percepts[partner]) #weightened -> each step in the list gets cut in half or alternatively each position gets divided by length
     else:
         v_list=0
     return  v_list
@@ -116,15 +116,11 @@ class TrustModel(mesa.Model):
         self.decrease=decrease
         self.memory=memory
         self.change_threshold=change_threshold
-        avg_node_degree=3
         self.edge_count=0
         self.step_num=0
         self.num_nodes = num_nodes
-        prob = avg_node_degree /  num_nodes
         self.G=nx.DiGraph()
-        #self.G = nx.erdos_renyi_graph(n=self.num_nodes, p=prob)
-        #self.grid = mesa.space.NetworkGrid(self.G)
-        self.schedule = mesa.time.BaseScheduler(self) #stage=interaction, step=update trust based on outcome of stage
+        self.schedule = mesa.time.BaseScheduler(self) 
         self.max_step=max_step
 
         self.datacollector = mesa.DataCollector(model_reporters=
@@ -192,7 +188,7 @@ class TrustModel(mesa.Model):
                 self.G.add_edge(a.unique_id,partner.unique_id,weight=weight,info=info)
             self.schedule.remove(a) #remove all trustees from schedule
             self.schedule.add(a) #add all trustees in end of schedule to execite only after action of trustors
-         
+         #implement removal of edges for weight <0
         for i,a in enumerate(trustors):
             partner=trustees[i]
             a.partner=partner
@@ -218,8 +214,6 @@ class TrustModel(mesa.Model):
             a.wealth-=self.decrease
 
             #grow DiGraph for future analysis
-            
-           
 
             df=make_edge_df(self.G)
             df["step"]=self.step_num

@@ -79,13 +79,15 @@ class TrustAgent(mesa.Agent):
 
     def calculate_neighbor_info(self):
         self.info=0
-        #self.neighbors=self.model.grid.get_neighbors(node_id=self.unique_id, include_center=False,radius=1)
         self.neighbors=self.model.G.neighbors(self.unique_id)
         i=0
         for n in self.neighbors:
             i+=1
             if n in self.percepts:
-                weight=fsum(self.percepts[n])/len(self.percepts[n])
+                for i, p in enumerate(self.percepts[n]):
+                    summed_percepts=(1/(len(self.percepts[n])-i))*p
+                weight=summed_percepts/len(self.percepts[n])
+
             else:
                 weight=self.generalized_trust
             
@@ -93,8 +95,9 @@ class TrustAgent(mesa.Agent):
                 if a.unique_id in self.neighbors:
                     if self.partner.unique_id in a.percepts: #and self.partner is not None:
                         self.info+=fsum(a.percepts[self.partner.unique_id])*weight
-
-        if self.info > 0:
+#calculate info with memory (for each position in the list, the effect gets halfed)
+#influence only by nodes with negative edge influence decision negatively 
+        if self.info != 0:
             self.info=self.info/i #averages info
             self.info=self.center(self.info)
         print(self.info)
