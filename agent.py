@@ -6,7 +6,7 @@ class TrustAgent(mesa.Agent):
     def __init__(self, id:int,model):
         super().__init__(id,model)
         self.generalized_trust=np.random.normal(loc=0.0,scale=0.5,size=None)
-        self.wealth=np.random.uniform(low=1,high=10) #pareto distribution for wealth
+        self.wealth=np.random.pareto(a=5.) #pareto distribution for wealth
         self.type=""
         self.send_money=False
         self.info=0 #sum of info from neighbors

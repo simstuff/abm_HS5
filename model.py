@@ -86,6 +86,9 @@ def get_id(agent):
 def get_security_level(agent):
     return agent.security_level
 
+def get_num_nodes(model):
+    return model.G.number_of_nodes()
+
 #Make df from edges to store in csv
 def make_edge_df(G):
     edges = {}
@@ -129,7 +132,8 @@ class TrustModel(mesa.Model):
            "GeneralizedTrustingAgents":get_gtrusting,
            "GeneralizedMistrustingAgents":get_gmistrusting,
            "AvgPersonalizedTrust":get_avg_ptrust,
-           "AvgGeneralizedTrust":get_avg_gtrust
+           "AvgGeneralizedTrust":get_avg_gtrust,
+           "NumberOfNodes":get_num_nodes
         },
         agent_reporters=
         {
@@ -143,15 +147,6 @@ class TrustModel(mesa.Model):
             #"Atributes":"attributes",possible extensions
         }
      )   
-        #for i,node in enumerate(self.G.nodes()):
-         #   a=TrustAgent(i,self)
-          #  if i < self.num_nodes/2:
-           #     a.type="trustor"
-            #else:
-             #   a.type="trustee"
-            #self.schedule.add(a)
-            #self.grid.place_agent(a,node_id=node)
-            #print(f"Agent placed: {a.unique_id} in Node {node}" )
 
         for i in range(self.num_nodes):
             a=TrustAgent(i,self)
@@ -212,6 +207,9 @@ class TrustModel(mesa.Model):
 
         for a in self.schedule.agent_buffer(shuffled=True):
             a.wealth-=self.decrease
+            if a.wealth<0:
+                self.G.remove_node(a.unique_id)
+                #self.schedule.remove(a)
 
             #grow DiGraph for future analysis
 

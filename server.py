@@ -26,6 +26,11 @@ wealth_chart=mesa.visualization.ChartModule(
     ]
 )
 
+node_chart=mesa.visualization.ChartModule(
+    [
+        {"Label":"NumberOfNodes","Color":"#FF0000"},
+    ]
+)
 def network_portrayal(G):
     # The model ensures there is always 1 agent per node
 
@@ -105,4 +110,4 @@ model_params={
     "max_step":mesa.visualization.Slider(name="max_step",value=100,min_value=1,max_value=1000,step=1,description="end of simulation if steo = max_step"),
 
 }
-server = mesa.visualization.ModularServer(model_cls=TrustModel,visualization_elements=[wealth_chart,trust_chart,avg_gen_trust_chart,avg_ptrust_chart],name="TrustModel",model_params=model_params ,port=8080)
+server = mesa.visualization.ModularServer(model_cls=TrustModel,visualization_elements=[wealth_chart,node_chart,trust_chart,avg_gen_trust_chart,avg_ptrust_chart],name="TrustModel",model_params=model_params ,port=8080)
