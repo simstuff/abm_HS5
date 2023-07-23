@@ -164,26 +164,11 @@ class TrustModel(mesa.Model):
         for i,a in enumerate(self.schedule.agent_buffer(shuffled=True)):
             if i < self.num_nodes/2:
                 a.type="trustor"
-                trustees.append(a)
+                trustors.append(a)
             else:
                 a.type="trustee"
-                trustors.append(a)
+                trustees.append(a)
 
-        for i,a in enumerate(trustees):
-            partner=trustors[i]
-            a.partner=partner
-            if self.G.has_edge(a.unique_id,partner.unique_id):
-                weight=get_personalized_trust(a,partner=partner.unique_id)
-                info=get_info(a)      
-                self.G[a.unique_id][partner.unique_id].update({"info":info})
-                self.G[a.unique_id][partner.unique_id].update({"weight": weight})
-            else:
-                weight=get_personalized_trust(a,partner=partner.unique_id)
-                info=get_info(a)      
-                self.G.add_edge(a.unique_id,partner.unique_id,weight=weight,info=info)
-            self.schedule.remove(a) #remove all trustees from schedule
-            self.schedule.add(a) #add all trustees in end of schedule to execite only after action of trustors
-         #implement removal of edges for weight <0
         for i,a in enumerate(trustors):
             partner=trustees[i]
             a.partner=partner
@@ -199,6 +184,22 @@ class TrustModel(mesa.Model):
             print("Agent {} is trustor and interacting with trustee {}".format(a.unique_id,partner.unique_id))
             self.schedule.remove(a)
             self.schedule.add(a)
+        
+        for i,a in enumerate(trustees):
+            partner=trustors[i]
+            a.partner=partner
+            if self.G.has_edge(a.unique_id,partner.unique_id):
+                weight=get_personalized_trust(a,partner=partner.unique_id)
+                info=get_info(a)      
+                self.G[a.unique_id][partner.unique_id].update({"info":info})
+                self.G[a.unique_id][partner.unique_id].update({"weight": weight})
+            else:
+                weight=get_personalized_trust(a,partner=partner.unique_id)
+                info=get_info(a)      
+                self.G.add_edge(a.unique_id,partner.unique_id,weight=weight,info=info)
+            self.schedule.remove(a) #remove all trustees from schedule
+            self.schedule.add(a) #add all trustees in end of schedule to execite only after action of trustors
+         
         
         print(self.G)
         

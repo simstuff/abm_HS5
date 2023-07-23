@@ -8,11 +8,11 @@ class TrustAgent(mesa.Agent):
         self.generalized_trust=np.random.normal(loc=0.0,scale=0.5,size=None)
         self.wealth=np.random.pareto(a=5.) #pareto distribution for wealth
         self.type=""
-        self.send_money=False
+        self.send_money=0.
         self.info=0 #sum of info from neighbors
         self.suspectability=np.random.uniform(low=0,high=1.0)
         self.percepts={}
-        self.last_wealth=None
+        self.last_wealth=self.wealth
         self.model=model
         self.partner=None
         self.neighbors=[] #to be initialized through grid
@@ -21,29 +21,30 @@ class TrustAgent(mesa.Agent):
         self.memory_span=np.random.uniform(low=1,high=self.model.memory) #draw from prob dstr
 
     def step(self):
-        if self.last_wealth is not None: #to not execute check in first round
-            self.check_wealth_update_trust()
-        self.last_wealth=self.wealth
+        self.check_wealth_update_trust()
+        #self.last_wealth=self.wealth
         self.interact()
 
 
     def interact(self):
         self.calculate_neighbor_info()
         trust_level=self.calculate_trust() #believe
-        self.last_wealth=self.wealth
+        
 
         if self.type=="trustor":
             print("trustor acts")
             if self.wealth > self.security_level*trust_level: #desire
                 self.partner.wealth+=self.model.increase #intention
-                #print("increased wealth")
+                print("send money",self.partner.wealth,self.partner.unique_id,self.unique_id)
             
         else:
             print("trustee acts")
-            if self.wealth > self.security_level*trust_level: #desire
-                self.partner.wealth+=self.model.increase/2 #intention
-                self.wealth-=self.model.increase/2
-                #print("decreased wealth")
+            print(self.unique_id,self.wealth,self.last_wealth)
+            if self.wealth>self.last_wealth:
+                if self.wealth > self.security_level*trust_level: #desire
+                    self.partner.wealth+=(self.wealth-self.last_wealth)/2 #intention
+                    self.wealth-=(self.wealth-self.last_wealth)/2
+                    print("send money")
 
         if len(self.memory) > self.model.memory:
             if sum(self.memory[-self.model.memory:])==self.model.memory:
@@ -95,8 +96,6 @@ class TrustAgent(mesa.Agent):
                 if a.unique_id in self.neighbors:
                     if self.partner.unique_id in a.percepts: #and self.partner is not None:
                         self.info+=fsum(a.percepts[self.partner.unique_id])*weight
-#calculate info with memory (for each position in the list, the effect gets halfed)
-#influence only by nodes with negative edge influence decision negatively 
         if self.info != 0:
             self.info=self.info/i #averages info
             self.info=self.center(self.info)
