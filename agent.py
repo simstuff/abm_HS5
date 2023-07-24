@@ -10,14 +10,14 @@ class TrustAgent(mesa.Agent):
         self.type=""
         self.send_money=0.
         self.info=0 #sum of info from neighbors
-        self.suspectability=np.random.uniform(low=0,high=1.0)
+        self.suspectability=np.random.normal(loc=0.5,scale=0.5,size=None)
         self.percepts={}
         self.last_wealth=self.wealth
         self.model=model
         self.partner=None
         self.neighbors=[] #to be initialized through grid
         self.memory=[]#sum all elements in array and if 3 then change generlaized trust
-        self.security_level=np.random.uniform(low=1,high=1.5)
+        self.security_level=np.random.normal(loc=1,scale=0.5,size=None)
         self.memory_span=np.random.uniform(low=1,high=self.model.memory) #draw from prob dstr
 
     def step(self):
