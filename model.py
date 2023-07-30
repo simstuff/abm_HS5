@@ -2,9 +2,9 @@ import mesa
 from agent import TrustAgent
 import networkx as nx
 import pandas as pd
-import pickle
+import numpy as np
 import sys
-import matplotlib.pyplot as plt
+
 
 #Model level data collectors
 
@@ -89,6 +89,18 @@ def get_security_level(agent):
 def get_num_nodes(model):
     return model.G.number_of_nodes()
 
+def get_increase(model):
+    return model.increase
+
+def get_decrease(model):
+    return model.decrease
+
+def get_memory(model):
+    return model.memory
+
+def get_threshold(model):
+    return model.change_threshold
+
 #Make df from edges to store in csv
 def make_edge_df(G):
     edges = {}
@@ -113,15 +125,15 @@ def make_edge_df(G):
     
 
 class TrustModel(mesa.Model):
-    def __init__(self, num_nodes:int,increase:float,change_threshold:float,decrease:float,memory:int,max_step:int): #different graphs to initialize network?
+    def __init__(self,max_step:int): 
         self.seed=42
-        self.increase=increase
-        self.decrease=decrease
-        self.memory=memory
-        self.change_threshold=change_threshold
+        self.increase=np.random.uniform(low=1.5,high=4.5)
+        self.decrease=np.random.uniform(low=1.0,high=4.0)
+        self.memory=np.random.randint(low=2,high=10)
+        self.change_threshold=np.random.uniform(low=0.1,high=1.0)
         self.edge_count=0
         self.step_num=0
-        self.num_nodes = num_nodes
+        self.num_nodes = 100
         self.G=nx.DiGraph()
         self.schedule = mesa.time.BaseScheduler(self) 
         self.max_step=max_step
@@ -133,7 +145,10 @@ class TrustModel(mesa.Model):
            "GeneralizedMistrustingAgents":get_gmistrusting,
            "AvgPersonalizedTrust":get_avg_ptrust,
            "AvgGeneralizedTrust":get_avg_gtrust,
-           "NumberOfNodes":get_num_nodes
+           "NumberOfNodes":get_num_nodes,
+           "Increase":get_increase,
+           "Decrease":get_decrease,
+           "Threshold":get_threshold
         },
         agent_reporters=
         {
@@ -208,8 +223,8 @@ class TrustModel(mesa.Model):
 
         for a in self.schedule.agent_buffer(shuffled=True):
             a.wealth-=self.decrease
-            if a.wealth<0:
-                self.G.remove_node(a.unique_id)
+            #if a.wealth<0:
+                #self.G.remove_node(a.unique_id)
                 #self.schedule.remove(a)
 
             #grow DiGraph for future analysis
@@ -236,16 +251,6 @@ class TrustModel(mesa.Model):
         if self.step_num==self.max_step:
             sys.exit()      
 
-        #if self.step_num==10:
-         #   pos=nx.spring_layout(self.DG,seed=5)
-          #  fig, ax = plt.subplots()
-           # nx.draw(self.DG, pos)
-            #edge_labels=dict([((u,v,),d['weight'])
-             #   for u,v,d in self.DG.edges(data=True)])
-            #nx.draw_networkx_edge_labels(self.DG, pos, edge_labels=edge_labels, label_pos=0.3, font_size=7)
-            #plt.show()
-
-#draw edge width based on personalized trust value to improve readability
 
 
 
