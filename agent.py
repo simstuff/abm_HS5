@@ -81,12 +81,12 @@ class TrustAgent(mesa.Agent):
     def calculate_neighbor_info(self):
         self.info=0
         self.neighbors=self.model.G.neighbors(self.unique_id)
-        i=0
+        k=0
         for n in self.neighbors:
-            i+=1
             if n in self.percepts:
+                summed_percepts=0.
                 for i, p in enumerate(self.percepts[n]):
-                    summed_percepts=(1/(len(self.percepts[n])-i))*p
+                    summed_percepts+=(1/(len(self.percepts[n])-i))*p
                 weight=summed_percepts/len(self.percepts[n])
 
             else:
@@ -95,9 +95,10 @@ class TrustAgent(mesa.Agent):
             for a in self.model.schedule.agent_buffer(shuffled=False):
                 if a.unique_id in self.neighbors:
                     if self.partner.unique_id in a.percepts: #and self.partner is not None:
+                        k+=1
                         self.info+=fsum(a.percepts[self.partner.unique_id])*weight
         if self.info != 0:
-            self.info=self.info/i #averages info
+            self.info=self.info/k #averages info
             self.info=self.center(self.info)
         print(self.info)
 

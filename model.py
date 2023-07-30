@@ -14,12 +14,6 @@ def total_wealth(model):
       total+=a.wealth
     return total
 
-def personalized_trust_per_agent(model):
-    values={}
-    for a in model.schedule.agent_buffer(shuffled=False):
-        values[a.unique_id]=a.percepts
-    return values
-
 def get_gtrusting(model):
     count=0
     for a in model.schedule.agent_buffer(shuffled=False):
@@ -35,21 +29,22 @@ def get_gmistrusting(model):
     return count
 
 def get_avg_ptrust(model):
-    values=personalized_trust_per_agent(model)
+    values=[]
     total=[]
     tmp=[]
-    if bool(values):
-        for val in values.values():#get each trust dict
-            for v in val.values():#get list of trust values
-                tmp.append(sum(v)) 
-            try:
-                total.append(sum(tmp)/len(tmp))
-            except ZeroDivisionError:
-                print("division by zero")
+    for a in model.schedule.agent_buffer(shuffled=False):
+        values.append(a.percepts)
+    
+    for val in values:#get each trust dict
+        for v in val.values():#get list of trust values
+            tmp.append(sum(v)) 
+        try:
+            total.append(sum(tmp)/len(tmp))
+        except ZeroDivisionError:
+            total=0
         total=sum(total)/len(total)
         return total
-    else:
-        return 0
+    
 
        
 def get_avg_gtrust(model):
@@ -70,12 +65,18 @@ def get_info(agent):
 def get_generalized_trust(agent):
     return agent.generalized_trust
     
-def get_personalized_trust(agent,partner=None):
-    if partner in agent.percepts:
-        v_list=sum(agent.percepts[partner])/len(agent.percepts[partner]) #weightened -> each step in the list gets cut in half or alternatively each position gets divided by length
+def get_personalized_trust(agent):
+    if agent.partner.unique_id in agent.percepts:
+        summed_percepts=0.
+        for i,p in enumerate(agent.percepts[agent.partner.unique_id]):
+            summed_percepts+=(1/(len(agent.percepts[agent.partner.unique_id])-i))*p
+        ptrust=summed_percepts/len(agent.percepts[agent.partner.unique_id])
     else:
-        v_list=0
-    return  v_list
+        ptrust=0
+    return  ptrust
+
+def get_partner(agent):
+    return agent.partner.unique_id
     
 def get_suspectability(agent):
     return agent.suspectability
@@ -127,8 +128,8 @@ def make_edge_df(G):
 class TrustModel(mesa.Model):
     def __init__(self,max_step:int): 
         self.seed=42
-        self.increase=np.random.uniform(low=1.5,high=4.5)
-        self.decrease=np.random.uniform(low=1.0,high=4.0)
+        self.increase=np.random.uniform(low=3.0,high=7.5)
+        self.decrease=np.random.uniform(low=1.0,high=3.0)
         self.memory=np.random.randint(low=2,high=10)
         self.change_threshold=np.random.uniform(low=0.1,high=1.0)
         self.edge_count=0
@@ -153,13 +154,13 @@ class TrustModel(mesa.Model):
         agent_reporters=
         {
             "Info":get_info,
-            "PersonalizedTrust":get_personalized_trust,
+            "Avg_PersonalizedTrust":get_personalized_trust,
             "GeneralizedTrust":get_generalized_trust,
             "Wealth":get_wealth,
             "Suspectability":get_suspectability,
             "ID":get_id,
             "SecurityLevel":get_security_level,
-            #"Atributes":"attributes",possible extensions
+            "Partner":get_partner
         }
      )   
 
@@ -188,12 +189,12 @@ class TrustModel(mesa.Model):
             partner=trustees[i]
             a.partner=partner
             if self.G.has_edge(a.unique_id,partner.unique_id):
-                weight=get_personalized_trust(a,partner=partner.unique_id)
+                weight=get_personalized_trust(a)
                 info=get_info(a)      
                 self.G[a.unique_id][partner.unique_id].update({"info":info})
                 self.G[a.unique_id][partner.unique_id].update({"weight": weight})
             else:
-                weight=get_personalized_trust(a,partner=partner.unique_id)
+                weight=get_personalized_trust(a)
                 info=get_info(a)      
                 self.G.add_edge(a.unique_id,partner.unique_id,weight=weight,info=info)
             print("Agent {} is trustor and interacting with trustee {}".format(a.unique_id,partner.unique_id))
@@ -204,12 +205,12 @@ class TrustModel(mesa.Model):
             partner=trustors[i]
             a.partner=partner
             if self.G.has_edge(a.unique_id,partner.unique_id):
-                weight=get_personalized_trust(a,partner=partner.unique_id)
+                weight=get_personalized_trust(a)
                 info=get_info(a)      
                 self.G[a.unique_id][partner.unique_id].update({"info":info})
                 self.G[a.unique_id][partner.unique_id].update({"weight": weight})
             else:
-                weight=get_personalized_trust(a,partner=partner.unique_id)
+                weight=get_personalized_trust(a)
                 info=get_info(a)      
                 self.G.add_edge(a.unique_id,partner.unique_id,weight=weight,info=info)
             self.schedule.remove(a) #remove all trustees from schedule
