@@ -84,10 +84,10 @@ class TrustAgent(mesa.Agent):
         k=0
         for n in self.neighbors:
             if n in self.percepts:
-                summed_percepts=0.
+                summed_percepts1=0.
                 for i, p in enumerate(self.percepts[n]):
-                    summed_percepts+=(1/(len(self.percepts[n])-i))*p
-                weight=summed_percepts/len(self.percepts[n])
+                    summed_percepts1+=(1/(len(self.percepts[n])-i))*p
+                weight=summed_percepts1/len(self.percepts[n])
 
             else:
                 weight=self.generalized_trust
@@ -96,7 +96,10 @@ class TrustAgent(mesa.Agent):
                 if a.unique_id in self.neighbors:
                     if self.partner.unique_id in a.percepts: #and self.partner is not None:
                         k+=1
-                        self.info+=fsum(a.percepts[self.partner.unique_id])*weight
+                        summed_percepts1=0.
+                        for i, p in enumerate(a.percepts[self.partner.unique_id]):
+                            summed_percepts2+=(1/(len(self.percepts[n])-i))*p
+                        self.info+=summed_percepts2*weight
         if self.info != 0:
             self.info=self.info/k #averages info
             self.info=self.center(self.info)
