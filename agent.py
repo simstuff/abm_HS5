@@ -32,19 +32,19 @@ class TrustAgent(mesa.Agent):
         
 
         if self.type=="trustor":
-            print("trustor acts")
+            #print("trustor acts")
             if self.wealth > self.security_level*trust_level: #desire
                 self.partner.wealth+=self.model.increase #intention
-                print("send money",self.partner.wealth,self.partner.unique_id,self.unique_id)
+                #print("send money",self.partner.wealth,self.partner.unique_id,self.unique_id)
             
         else:
-            print("trustee acts")
-            print(self.unique_id,self.wealth,self.last_wealth)
+            #print("trustee acts")
+            #print(self.unique_id,self.wealth,self.last_wealth)
             if self.wealth>self.last_wealth:
                 if self.wealth > self.security_level*trust_level: #desire
                     self.partner.wealth+=(self.wealth-self.last_wealth)/2 #intention
                     self.wealth-=(self.wealth-self.last_wealth)/2
-                    print("send money")
+                    #print("send money",self.partner.wealth,self.partner.unique_id,self.unique_id)
 
         if len(self.memory) > self.model.memory:
             if sum(self.memory[-self.model.memory:])==self.model.memory:
@@ -65,9 +65,12 @@ class TrustAgent(mesa.Agent):
     #trust should be expressed as percentage to enable gradual sendings, send =1*trust, if < 0.5 no trust
     def calculate_trust(self):
         if self.partner.unique_id in self.percepts:
-            personalized_trust=self.percepts.get(self.partner.unique_id)
-            if isinstance(personalized_trust,list):
-                personalized_trust=fsum(personalized_trust)/len(personalized_trust)
+            trust_list=self.percepts.get(self.partner.unique_id)
+            personalized_trust=0.
+            if isinstance(trust_list,list):
+                for i,p in enumerate(trust_list):
+                    personalized_trust+=(1/(len(trust_list)-i))*p
+            personalized_trust=personalized_trust/len(trust_list)
             trust_level=(((self.generalized_trust+personalized_trust)/2)*(1-self.suspectability))+self.suspectability*self.info*(self.generalized_trust+personalized_trust)/2
 
         else:
@@ -96,14 +99,14 @@ class TrustAgent(mesa.Agent):
                 if a.unique_id in self.neighbors:
                     if self.partner.unique_id in a.percepts: #and self.partner is not None:
                         k+=1
-                        summed_percepts1=0.
+                        summed_percepts2=0.
                         for i, p in enumerate(a.percepts[self.partner.unique_id]):
-                            summed_percepts2+=(1/(len(self.percepts[n])-i))*p
+                            summed_percepts2+=(1/(len(a.percepts[self.partner.unique_id])-i))*p
                         self.info+=summed_percepts2*weight
         if self.info != 0:
             self.info=self.info/k #averages info
             self.info=self.center(self.info)
-        print(self.info)
+        #print(self.info)
 
     def check_wealth_update_trust(self):
         change=np.random.uniform() 
@@ -111,7 +114,7 @@ class TrustAgent(mesa.Agent):
         if self.partner.unique_id in self.percepts:
             last_trust_value=self.percepts.get(self.partner.unique_id)
             #print("--id--",last_trust_value)
-        else: #include forgetting through if len(last_tr_v)>5: last_trsut_v[-1]= else append
+        else:
             last_trust_value=self.generalized_trust
             last_trust_value=list([float(last_trust_value)])
 
