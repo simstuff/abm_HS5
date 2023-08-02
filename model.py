@@ -96,41 +96,18 @@ def get_increase(model):
 def get_decrease(model):
     return model.decrease
 
-def get_memory(model):
-    return model.memory
+def get_memory(agent):
+    return agent.memory_span
 
 def get_threshold(model):
     return model.change_threshold
 
-#Make df from edges to store in csv
-def make_edge_df(G):
-    edges = {}
-    for source, target, attribute in G.edges(data=True):
-
-        if not edges.get('source'):
-            edges['source'] = [source]
-        else:
-            edges['source'].append(source)
-
-        if not edges.get('target'):
-            edges['target'] = [target]
-        else:
-            edges['target'].append(target)
-
-        for key, value in attribute.items():
-            if not edges.get(key):
-                edges[key] = [value]
-            else:
-                edges[key].append(value)
-    return pd.DataFrame(edges)
-    
 
 class TrustModel(mesa.Model):
     def __init__(self,max_step:int): 
         self.seed=42
         self.increase=np.random.uniform(low=3.0,high=7.5)
         self.decrease=np.random.uniform(low=1.0,high=3.0)
-        self.memory=np.random.randint(low=2,high=10)
         self.change_threshold=np.random.uniform(low=0.1,high=1.0)
         self.edge_count=0
         self.step_num=0
@@ -160,7 +137,8 @@ class TrustModel(mesa.Model):
             "Suspectability":get_suspectability,
             "ID":get_id,
             "SecurityLevel":get_security_level,
-            "Partner":get_partner
+            "Partner":get_partner,
+            "Memory":get_memory
         }
      )   
 
@@ -218,6 +196,9 @@ class TrustModel(mesa.Model):
          
         
         print(self.G)
+        #df=make_edge_df(self.G)
+        path="graphs/"+str(self.step_num)+"_graph_data.edgelist"
+        nx.write_edgelist(self.G, path=path,data=True)
         
         self.schedule.step() 
 
@@ -230,16 +211,7 @@ class TrustModel(mesa.Model):
 
             #grow DiGraph for future analysis
 
-            df=make_edge_df(self.G)
-            df["step"]=self.step_num
-            path="graphs/"+str(self.step_num)+"_graph_data"+".csv"
-            df.to_csv(path)
-
-                #safe in picke file
-                #graph_data=nx.to_numpy_array(self.DG)
-                #path="pickled_graphs/graph_data_"+str(self.step_num)+".pickle"
-                #with open(path, 'wb') as handle:
-                #    pickle.dump(graph_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+          
             
         self.step_num+=1
         if self.step_num > 1:  
