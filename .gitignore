@@ -3,3 +3,4 @@ mesa_HS5/
 *.pickle
 __pycache__/
 .ipynb_checkpoints/
+graphs/

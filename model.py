@@ -99,16 +99,15 @@ def get_decrease(model):
 def get_memory(agent):
     return agent.memory_span
 
-def get_threshold(model):
-    return model.change_threshold
+def get_threshold(agent):
+    return agent.change_threshold
 
 
 class TrustModel(mesa.Model):
     def __init__(self,max_step:int): 
         self.seed=42
-        self.increase=np.random.uniform(low=3.0,high=7.5)
+        self.increase=np.random.uniform(low=3.0,high=5)
         self.decrease=np.random.uniform(low=1.0,high=3.0)
-        self.change_threshold=np.random.uniform(low=0.1,high=1.0)
         self.edge_count=0
         self.step_num=0
         self.num_nodes = 100
@@ -126,7 +125,6 @@ class TrustModel(mesa.Model):
            "NumberOfNodes":get_num_nodes,
            "Increase":get_increase,
            "Decrease":get_decrease,
-           "Threshold":get_threshold
         },
         agent_reporters=
         {
@@ -138,7 +136,8 @@ class TrustModel(mesa.Model):
             "ID":get_id,
             "SecurityLevel":get_security_level,
             "Partner":get_partner,
-            "Memory":get_memory
+            "Memory":get_memory,
+            "Threshold":get_threshold
         }
      )   
 

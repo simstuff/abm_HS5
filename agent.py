@@ -5,9 +5,9 @@ from math import fsum
 class TrustAgent(mesa.Agent):
     def __init__(self, id:int,model):
         super().__init__(id,model)
-        self.generalized_trust=np.random.normal(loc=0.0,scale=0.5,size=None)
+        self.generalized_trust=np.random.normal(loc=0.0,scale=1,size=None)
         self.wealth=np.random.pareto(a=5.) #pareto distribution for wealth
-        self.change_threshold=np.random.uniform(low=0.1,high=1.0) #threshold for change of generalized trust
+        self.change_threshold=np.random.normal(loc=0.5,scale=0.5,size=None) #threshold for change of generalized trust
         self.type="" #trustor or trustee
         self.info=0 #info from neighbors
         self.suspectability=np.random.normal(loc=0.5,scale=0.5,size=None) 
