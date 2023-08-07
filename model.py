@@ -1,7 +1,7 @@
 import mesa
 from agent import TrustAgent
 import networkx as nx
-import pandas as pd
+import random
 import numpy as np
 import sys
 
