@@ -6,3 +6,4 @@ __pycache__/
 graphs/
 *.zip
 pickled_graphs/
+*.edgelist
